@@ -19,7 +19,6 @@
  */
 package org.fineract.messagegateway.sms.providers.impl.telerivet;
 
-import io.camunda.zeebe.client.ZeebeClient;
 import org.fineract.messagegateway.sms.domain.OutboundMessages;
 import org.fineract.messagegateway.sms.repository.SmsOutboundMessageRepository;
 import org.fineract.messagegateway.sms.util.CallbackEvent;
@@ -31,9 +30,6 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import static org.fineract.messagegateway.zeebe.ZeebeVariables.*;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @RestController
@@ -46,10 +42,6 @@ public class TelerivetApiResource implements ApplicationEventPublisherAware {
 
     private ApplicationEventPublisher publisher;
 
-    @Autowired
-    public TelerivetMessageProvider telerivetMessageProvider;
-    @Autowired
-    private ZeebeClient zeebeClient;
     //You must override this method; It will give you acces to ApplicationEventPublisher
     public void setApplicationEventPublisher(ApplicationEventPublisher publisher) {
         this.publisher = publisher;
@@ -68,10 +60,9 @@ public class TelerivetApiResource implements ApplicationEventPublisherAware {
             logger.debug("Status Callback received from Telerivet for "+report.getId() +" with status:" + report.getStatus());
             message.setDeliveryStatus(TelerivetStatus.smsStatus(report.getStatus()).getValue());
             message.setDeliveryErrorMessage(report.getError_message());
-//            this.smsOutboundMessageRepository.save(message) ;
+            this.smsOutboundMessageRepository.save(message) ;
             //publishing the event here
             if(message.getDeliveryStatus() == 300 || message.getDeliveryStatus() == 400) {
-                publishZeebeVariable(message);
                 logger.info("Publishing Event with id " + report.getId());
                 publisher.publishEvent(new CallbackEvent(this, smsOutboundMessageRepository, report.getId()));
             }
@@ -79,24 +70,5 @@ public class TelerivetApiResource implements ApplicationEventPublisherAware {
             logger.info("Message with Message id "+report.getId()+" Not found");
         }
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-    public void publishZeebeVariable(OutboundMessages message){
-        logger.info("---------------- Publishing zeebe variable ----------------");
-        Map<String,Object> map=new HashMap<String,Object>();
-        map.put(DELIVERY_STATUS_CODE,message.getDeliveryStatus());
-
-        if (message.getDeliveryStatus() == 300) {
-            map.put(MESSAGE_DELIVERY_STATUS, true);
-        }
-        if (message.getDeliveryStatus() == 400) {
-            map.put(DELIVERY_ERROR_MESSAGE,message.getDeliveryErrorMessage());
-            map.put(MESSAGE_DELIVERY_STATUS, false);
-        }
-
-        zeebeClient.newSetVariablesCommand(message.getInternalId())
-                .variables(map)
-                .send()
-                .join();
-        logger.info("---------------- Zeebe variable published ----------------");
     }
 }

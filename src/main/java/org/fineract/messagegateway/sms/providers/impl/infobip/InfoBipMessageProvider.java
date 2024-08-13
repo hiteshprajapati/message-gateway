@@ -89,12 +89,7 @@ public class InfoBipMessageProvider extends Provider {
 
 	}
 	@Override
-	public void updateStatusByMessageId(SMSBridge bridge, String externalId, String orchestrator) throws MessageGatewayException {
-
-	}
-
-	@Override
-	public void publishZeebeVariable(OutboundMessages message) {
+	public void updateStatusByMessageId(SMSBridge bridge, String externalId) throws MessageGatewayException {
 
 	}
 

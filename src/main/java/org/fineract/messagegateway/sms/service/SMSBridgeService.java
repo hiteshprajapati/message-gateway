@@ -20,7 +20,6 @@ package org.fineract.messagegateway.sms.service;
 
 import java.util.Collection;
 
-import com.google.gson.JsonObject;
 import org.fineract.messagegateway.service.SecurityService;
 import org.fineract.messagegateway.sms.domain.SMSBridge;
 import org.fineract.messagegateway.sms.exception.SMSBridgeNotFoundException;

@@ -19,10 +19,8 @@
 package org.fineract.messagegateway.sms.providers.impl.telerivet;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 
-import io.camunda.zeebe.client.ZeebeClient;
 import org.fineract.messagegateway.configuration.HostConfig;
 import org.fineract.messagegateway.constants.MessageGatewayConstants;
 import org.fineract.messagegateway.exception.MessageGatewayException;
@@ -40,7 +38,6 @@ import org.springframework.stereotype.Service;
 
 import com.telerivet.*;
 
-import static org.fineract.messagegateway.zeebe.ZeebeVariables.*;
 
 @Service(value = "telerivet")
 @Component
@@ -62,14 +59,12 @@ public class TelerivetMessageProvider extends Provider {
     @Autowired
     private SmsOutboundMessageRepository smsOutboundMessageRepository;
 
-    @Autowired
-    private ZeebeClient zeebeClient;
 
 
     @Autowired
     public TelerivetMessageProvider(final HostConfig hostConfig) {
         callBackUrl = String.format("%s://%s/telerivet/report/", hostConfig.getProtocol(), hostConfig.getHostName());
-        logger.info("Registering call back to Telerivet: {}", callBackUrl);
+        logger.info("Registering call back to Telerivet:" + callBackUrl);
     }
 
     @Override
@@ -91,25 +86,20 @@ public class TelerivetMessageProvider extends Provider {
         String messageToSend = message.getMessage();
         try {
             TelerivetAPI tr = new TelerivetAPI(providerAPIKey);
-            Project project = tr.initProjectById(providerProjectId);
-            logger.info("Sending SMS to {} ...",mobileNumber);
+           Project project = tr.initProjectById(providerProjectId);
+            logger.info("Sending SMS to " + mobileNumber + " ...");
             Message sent_msg = project.sendMessage(Util.options(
                     "content", messageToSend,
                     "to_number", mobileNumber,
                     "status-url", statusURL));
             message.setDeliveryStatus(TelerivetStatus.smsStatus(sent_msg.getStatus()).getValue());
             message.setExternalId(sent_msg.getId());
-
-            logger.debug("Publishing internal id {} and external id {} to the zeebe workflow:",message.getInternalId(),message.getExternalId());
-
-            publishZeebeVariable(message);
-
             logger.info(sent_msg.getId());
-            logger.info("TelerivetMessageProvider.sendMessage(): {}",  TelerivetStatus.smsStatus(sent_msg.getStatus()));
+            logger.info("TelerivetMessageProvider.sendMessage():" + TelerivetStatus.smsStatus(sent_msg.getStatus()));
 
             if (message.getDeliveryStatus().equals(SmsMessageStatusType.FAILED.getValue())) {
                 message.setDeliveryErrorMessage(sent_msg.getErrorMessage());
-                logger.error("Sending SMS to : {}  failed with reason: {}", message.getMobileNumber(), sent_msg.getErrorMessage());
+                logger.error("Sending SMS to :" + message.getMobileNumber() + " failed with reason " + sent_msg.getErrorMessage());
             }
         } catch (IOException e) {
             logger.error("ApiException while sending message to: {} with reason: {}" , message.getMobileNumber() , e.getMessage());
@@ -124,7 +114,7 @@ public class TelerivetMessageProvider extends Provider {
 
     }
     @Override
-    public void updateStatusByMessageId(SMSBridge bridge, String externalId,String orchestrator) throws MessageGatewayException {
+    public void updateStatusByMessageId(SMSBridge bridge, String externalId) throws MessageGatewayException {
         Message msg = null;
         try {
             logger.info("Fetching message status by id");
@@ -146,43 +136,11 @@ public class TelerivetMessageProvider extends Provider {
             msg = project.getMessageById(externalId);
             message.setDeliveryStatus(TelerivetStatus.smsStatus(msg.getStatus()).getValue());
             message.setDeliveryErrorMessage(msg.getErrorMessage());
-            if(orchestrator == null){
-                this.smsOutboundMessageRepository.save(message) ;
-            }else{
-                if(message.getDeliveryStatus() == 300 || message.getDeliveryStatus() == 400) {
-                    publishZeebeVariable(message);
-                }
-            }
+            this.smsOutboundMessageRepository.save(message) ;
             logger.debug("Value updated");
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void publishZeebeVariable(OutboundMessages message){
-        logger.info("---------------- Publishing zeebe variable ----------------");
-        Map<String,Object> map=new HashMap<String,Object>();
-        map.put(MESSAGE_EXTERNAL_ID,message.getExternalId());
-        map.put(MESSAGE_INTERNAL_ID,message.getInternalId());
-        map.put(TENANT_ID,message.getTenantId());
-        map.put(BRIDGE_ID,message.getBridgeId());
-        map.put(DELIVERY_STATUS_CODE,message.getDeliveryStatus());
-
-        map.put(TRANSACTION_ID,message.getInternalId());
-        if (message.getDeliveryStatus() == 300) {
-            map.put(MESSAGE_DELIVERY_STATUS, true);
-        }
-        if (message.getDeliveryStatus() == 400) {
-            map.put(DELIVERY_ERROR_MESSAGE,message.getDeliveryErrorMessage());
-            map.put(MESSAGE_DELIVERY_STATUS, false);
-        }
-        zeebeClient.newSetVariablesCommand(message.getInternalId())
-                .variables(map)
-                .send()
-                .join();
-
-        logger.info("----------------Zeebe variable published----------------");
     }
 }

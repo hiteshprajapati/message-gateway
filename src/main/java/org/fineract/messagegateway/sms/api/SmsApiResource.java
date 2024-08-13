@@ -82,18 +82,10 @@ public class SmsApiResource {
     	this.smsMessageService.sendShortMessage(tenantId, appKey, payload);
        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
-	@RequestMapping(value = "/send",method = RequestMethod.POST, consumes = {"application/json"}, produces = {"application/json"})
-	public ResponseEntity<Void> sendShortMessagesToProvider(@RequestHeader(MessageGatewayConstants.TENANT_IDENTIFIER_HEADER) final String tenantId,
-												  @RequestHeader(MessageGatewayConstants.TENANT_APPKEY_HEADER) final String appKey,
-															@RequestHeader(MessageGatewayConstants.X_ORCHESTRATOR) final String orchestrator,
-												  @RequestBody final List<OutboundMessages> payload) {
-		logger.info("Payload "+ payload.get(0).getMessage());
-		this.smsMessageService.sendShortMessageToProvider(tenantId, appKey, payload,orchestrator);
-		return new ResponseEntity<>(HttpStatus.ACCEPTED);
-	}
+
     @RequestMapping(value = "/report", method = RequestMethod.POST, consumes = {"application/json"}, produces = {"application/json"})
     public ResponseEntity<Collection<DeliveryStatusData>> getDeliveryStatus(@RequestHeader(MessageGatewayConstants.TENANT_IDENTIFIER_HEADER) final String tenantId,
-    		@RequestHeader(MessageGatewayConstants.TENANT_APPKEY_HEADER) final String appKey,@RequestHeader(MessageGatewayConstants.X_ORCHESTRATOR) final String orchestrator,
+    		@RequestHeader(MessageGatewayConstants.TENANT_APPKEY_HEADER) final String appKey,
     		@RequestBody final Collection<Long> internalIds) throws MessageGatewayException {
     	Collection<DeliveryStatusData> deliveryStatus = this.smsMessageService.getDeliveryStatus(tenantId, appKey, internalIds) ;
 		logger.info("From SMS API Resource, successfully fetched the message status");
@@ -111,7 +103,7 @@ public class SmsApiResource {
 					provider = (Provider) this.applicationContext.getBean(bridge.getProviderKey());
 					if (provider == null)
 						throw new ProviderNotDefinedException();
-					provider.updateStatusByMessageId(bridge, deliveryStatusData.getExternalId(),orchestrator);
+					provider.updateStatusByMessageId(bridge, deliveryStatusData.getExternalId());
 					Collection<Long> id = new ArrayList<Long>();
 					id.add(Long.valueOf(deliveryStatusData.getId()));
 					Collection<DeliveryStatusData> messageDeliveryStatus = this.smsMessageService.getDeliveryStatus(tenantId, appKey, id);

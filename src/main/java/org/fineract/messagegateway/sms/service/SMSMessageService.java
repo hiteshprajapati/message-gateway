@@ -95,14 +95,6 @@ public class SMSMessageService {
 		this.smsOutboundMessageRepository.saveAll(messages) ;
 		this.executorService.execute(new MessageTask(tenant, this.smsOutboundMessageRepository, this.smsProviderFactory, messages));
 	}
-	public void sendShortMessageToProvider(final String tenantId, final String tenantAppKey, final Collection<OutboundMessages> messages, final String orchestrator) {
-		logger.debug("Request Received to send messages.....");
-		Tenant tenant = this.securityService.authenticate(tenantId, tenantAppKey) ;
-		for(OutboundMessages message: messages) {
-			message.setTenant(tenant.getId());
-		}
-		this.executorService.execute(new MessageTask(tenant, this.smsOutboundMessageRepository, this.smsProviderFactory, messages,orchestrator));
-	}
 
 	public Collection<DeliveryStatusData> getDeliveryStatus(final String tenantId, final String tenantAppKey, final Collection<Long> internalIds) {
 		Tenant tenant = this.securityService.authenticate(tenantId, tenantAppKey) ;
@@ -155,7 +147,7 @@ public class SMSMessageService {
 		final SmsOutboundMessageRepository smsOutboundMessageRepository ;
 		final SMSProviderFactory smsProviderFactory ;
 		final Tenant tenant ;
-		final String orchestrator;
+
 		public MessageTask(final Tenant tenant, final SmsOutboundMessageRepository smsOutboundMessageRepository,
 						   final SMSProviderFactory smsProviderFactory,
 						   final Collection<OutboundMessages> messages) {
@@ -163,23 +155,12 @@ public class SMSMessageService {
 			this.messages = messages ;
 			this.smsOutboundMessageRepository = smsOutboundMessageRepository ;
 			this.smsProviderFactory = smsProviderFactory ;
-			this.orchestrator=null;
 		}
-		public MessageTask(final Tenant tenant, final SmsOutboundMessageRepository smsOutboundMessageRepository,
-						   final SMSProviderFactory smsProviderFactory,
-						   final Collection<OutboundMessages> messages, final String orchestrator) {
-			this.tenant = tenant ;
-			this.messages = messages ;
-			this.smsOutboundMessageRepository = smsOutboundMessageRepository ;
-			this.smsProviderFactory = smsProviderFactory ;
-			this.orchestrator = orchestrator;
-		}
+
 		@Override
 		public void run() {
 			this.smsProviderFactory.sendShortMessage(messages);
-			if(orchestrator == null) {
-				this.smsOutboundMessageRepository.saveAll(messages);
-			}
+			this.smsOutboundMessageRepository.saveAll(messages) ;
 		}
 	}
 
@@ -207,7 +188,7 @@ public class SMSMessageService {
 				page++;
 				totalPageSize = messages.getTotalPages();
 				this.smsProviderFactory.sendShortMessage(messages.getContent());
-//				this.smsOutboundMessageRepository.saveAll(messages);
+				this.smsOutboundMessageRepository.saveAll(messages);
 			}while (page < totalPageSize);
 			return totalPageSize;
 		}
