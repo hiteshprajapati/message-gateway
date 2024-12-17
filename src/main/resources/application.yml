@@ -17,10 +17,10 @@ spring:
       use-new-id-generator-mappings: false
 
   datasource:
-    url: jdbc:mysql:thin://operations-mysql:3306/messagegateway
+    url: ${MYSQL_JDBC_URL:jdbc:mariadb://localhost:3306/messagegateway}
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:password}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: ${JDBC_DRIVER_CLASS_NAME:org.mariadb.jdbc.Driver}
 
 # Status Callback configuration for Twilio. Port will be taken from server configuration
 hostconfig:
@@ -66,29 +66,4 @@ operationsconfig:
 
 logging:
   level:
-    org:
-      apache:
-        camel=DEBUG:
     root: INFO
-
-
-camel:
-  server-port: 5009
-  springboot:
-    main-run-controller: true
-  dataformat:
-    json-jackson:
-      auto-discover-object-mapper: true
-zeebe:
-  client:
-    max-execution-threads: 100
-    number-of-workers: 5
-    evenly-allocated-max-jobs: "#{${zeebe.client.max-execution-threads} / ${zeebe.client.number-of-workers}}"
-    ttl: 30000
-    security:
-      plaintext: true
-  broker:
-    contactpoint: "zeebe-zeebe-gateway:26500"
-  worker:
-    timer: "PT15S"
-    retries: 3
