@@ -18,13 +18,11 @@
  */
 package org.fineract.messagegateway.sms.domain;
 
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import java.io.Serializable;
-
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
@@ -32,7 +30,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 public abstract class AbstractPersistableCustom<PK extends Serializable> implements Persistable<PK> {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	protected PK id;
 
 	/*

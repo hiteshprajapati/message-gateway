@@ -18,6 +18,7 @@
  */
 package org.fineract.messagegateway.sms.service;
 
+import jakarta.annotation.PostConstruct;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -28,7 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
 import org.fineract.messagegateway.service.SecurityService;

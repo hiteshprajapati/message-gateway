@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -124,4 +125,12 @@ public class SmsApiResource {
 		OutboundMessages smsMessages = this.smsOutboundMessageRepository.findByInternalId(internalId);
 		return new ResponseEntity<>(smsMessages, HttpStatus.OK);
 	}
+
+	@RequestMapping(value = "/inbound", method = RequestMethod.GET, produces = {"application/xml"})
+	public ResponseEntity<String> handleInbound() {
+
+		String xmlResponseStr = "<Response><Message>Touchdown, Bo Jackson!</Message></Response>";
+		return new ResponseEntity<>(xmlResponseStr, HttpStatus.OK);
+	}
+
 }

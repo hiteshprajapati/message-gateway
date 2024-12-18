@@ -55,7 +55,7 @@ public interface SmsOutboundMessageRepository extends JpaRepository<OutboundMess
 	 * @param mifosTenantIdentifier -- Mifos X tenant identifier e.g. demo
 	 * @return List of {@link SmsMessageStatusType} objects
 	 **/
-	List<OutboundMessages> findByIdInAndTenantId(List<Long> idList, String mifosTenantIdentifier);
+	List<OutboundMessages> findByIdInAndTenantId(List<Long> idList, Long mifosTenantIdentifier);
 
 	OutboundMessages findByInternalId(Long internalId);
 }

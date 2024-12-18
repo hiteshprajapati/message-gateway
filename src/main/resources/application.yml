@@ -19,7 +19,7 @@ spring:
   datasource:
     url: ${MYSQL_JDBC_URL:jdbc:mariadb://localhost:3306/messagegateway}
     username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:password}
+    password: ${MYSQL_PASSWORD:mysql}
     driver-class-name: ${JDBC_DRIVER_CLASS_NAME:org.mariadb.jdbc.Driver}
 
 # Status Callback configuration for Twilio. Port will be taken from server configuration

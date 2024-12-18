@@ -54,7 +54,8 @@ public class TwilioMessageProvider extends Provider {
     @Autowired
     TwilioMessageProvider(final HostConfig hostConfig) {
     	builder = new StringBuilder() ;
-    	callBackUrl = String.format("%s://%s:%d/twilio/report/", hostConfig.getProtocol(),  hostConfig.getHostName(), hostConfig.getPort());
+    	//callBackUrl = String.format("%s://%s:%d/twilio/report/", hostConfig.getProtocol(),  hostConfig.getHostName(), hostConfig.getPort());
+    	callBackUrl = "https://082c-2401-4900-1c8e-4c74-e0f7-c626-c8ed-8e95.ngrok-free.app/sms/inbound";
     	logger.info("Registering call back to twilio:"+callBackUrl);
     }
 
