@@ -1,4 +1,4 @@
-# message-gateway
+# message-gateway - java 17
 
 ## Build set up
 ##### To create standalone application:
